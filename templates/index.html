@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>E-commerce Simples</title>
+</head>
+<body>
+    <h1>Catálogo de Produtos</h1>
+    <ul>
+        {% for produto in produtos %}
+            <li>
+                {{ produto.nome }} | R$ {{ produto.preco }}
+
+                <form action="/adicionar" method="POST">
+                	<input type="text" name="id" value="{{ produto.id }}" style="display: none">
+                	<input type="number" min=1 step=1 name="quantidade" value="1" style="width: 10%;height=10px;">
+                	<input type="submit" value="Adicionar ao carrinho">
+                </form>
+
+                <!-- <a href="/adicionar/{{ produto.id }}">Adicionar ao carrinho</a> -->
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2><a href="{{ url_cart_landpage }}">Vá para o carrinho</h2>
+    <!--- <h2>Carrinho</h2>
+    <ul>
+    	<h3>No seu carrinho:</h3>
+    	
+    	{% if carrinho|length == 0%}
+    		<h4>Ops... Não há nada para mostar aqui :(</h4>
+    		<p>Aproveite e adicione algo ao seu carrinho agora!</p>
+
+    	{% else %}
+    	
+    	{% for item in carrinho %}
+        
+        <li>
+            <p>{{ item.nome }} | R$ {{ item.preco }} | Qtd.: {{item.quantidade}}</p>
+        </li>
+
+        {% endfor %}
+
+        <h3>Opções para a sua compra:</h3>
+
+        {% for item in carrinho %}
+
+        	<form action="/alterar" method="POST">
+        		<input type="text" name="id_produto" value="{{ item.id }}" style="display: none">
+        		<label>
+            		<li><p>Altere a quantidade de {{ item.nome }} no seu carrinho para:</p></li>
+           		 </label>
+            
+            	<input type="text" name="quantidade" value="{{ item.quantidade }}" style="width: 10%;height=10px;">
+                <input type="submit" value="Alterar quantidade">
+        	</form>
+
+        	<form action="/remover" method="POST">
+        		<label>
+        			<p> Ou...</p>
+        		</label>
+            	<input type="text" name="id_produto" value="{{ item.id }}" style="display: none">
+            	<input type="submit" value="Remova do seu carrinho">
+            </form>--->
+                <!-- <a href="/remover/{{ item.id }}">Remover do carrinho</a> -->
+
+        <!-- {% endfor %}
+        	<form action="/esvaziar" method="GET">
+        		<label>
+        			<p>Ou então...</p>
+        		</label>
+        		<input type="submit" value="Esvazie o seu carrinho agora!">
+        	</form>
+    	{% endif %}
+    
+    </ul>
+
+    <p><strong>Total:</strong> R$ {{ total }}</p>
+    <a href="/pagar">Finalizar Pagamento</a> -->
+</body>
+</html>

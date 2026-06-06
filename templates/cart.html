@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <title>Carrinho</title>
+        <style>
+            body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
+            h1 { color: #333; }
+            a { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+        </style>
+    </head>
+    <body>
+    <ul>
+        <h1>No seu carrinho:</h1>
+        
+        {% if frontend_carrinho|length == 0%}
+            <h3>Ops... Não há nada para mostar aqui :(</h3>
+            <p>Aproveite e adicione algo ao seu carrinho agora!</p>
+
+        {% else %}
+        
+        {% for item in frontend_carrinho %}
+        
+        <li>
+            <p>{{ item.nome }} | R$ {{ item.preco }} | Qtd.: {{item.quantidade}}</p>
+        </li>
+
+        {% endfor %}
+
+        <h4>Opções para a sua compra:</h4>
+
+        {% for item in frontend_carrinho %}
+
+            <form action="{{ url_fronted_cart_chg_qtd }}" method="POST">
+                <!-- action era "/alterar" -->
+                <input type="text" name="id" value="{{ item.id }}" style="display: none">
+                <label>
+                    <li><p>Altere a quantidade de {{ item.nome }} no seu carrinho para:</p></li>
+                 </label>
+            
+                <input type="number" name="quantidade" min=1 step=1 value="{{ item.quantidade }}" style="width: 10%;height=10px;">
+                <input type="submit" value="Alterar quantidade">
+            </form>
+
+            <form action="{{ url_fronted_cart_rem_item }}" method="POST">
+                <!-- action era "/remover" -->
+                <label>
+                    <p> Ou...</p>
+                </label>
+                <input type="text" name="id" value="{{ item.id }}" style="display: none">
+                <input type="submit" value="Remova do seu carrinho">
+            </form>
+                <!-- <a href="/remover/{{ item.id }}">Remover do carrinho</a> -->
+
+        {% endfor %}
+            <form action="{{ url_fronted_cart_flush }}" method="GET">
+                <!-- action era "/esvaziar" -->
+                <label>
+                    <p>Ou então...</p>
+                </label>
+                <input type="submit" value="Esvazie o seu carrinho agora!">
+            </form>
+
+            <p><strong>Total:</strong> R$ {{ frontend_total }}</p>
+            <a href="/pagar">Finalizar Pagamento</a>
+        {% endif %}
+    
+    </ul>
+    </body>
+    </html>
