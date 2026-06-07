@@ -1,0 +1,262 @@
+/* ==========================================
+   1. CONFIGURAÇÕES GLOBAIS
+   ========================================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background-color: #f3f4f6;
+    color: #1f2937;
+    padding: 30px 15px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* Cabeçalho da página */
+.topo-pagina {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.topo-pagina h1 {
+    font-size: 1.8rem;
+    color: #111827;
+}
+
+.link-voltar {
+    color: #4b5563;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.link-voltar:hover {
+    color: #111827;
+    text-decoration: underline;
+}
+
+/* Estado Vazio */
+.carrinho-vazio {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* ==========================================
+   2. LAYOUT EM DUAS COLUNAS
+   ========================================== */
+.conteudo-carrinho {
+    display: grid;
+    grid-template-columns: 1fr 340px; /* Esquerda ganha o espaço restante, direita fixa em 340px */
+    gap: 25px;
+    align-items: start;
+}
+
+/* ==========================================
+   3. COLUNA DA ESQUERDA - CARDS DE PRODUTOS
+   ========================================== */
+.secao-itens {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.card-produto {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid #f3f4f6;
+}
+
+.info-produto h3 {
+    font-size: 1.2rem;
+    color: #111827;
+    margin-bottom: 4px;
+}
+
+.preco-unitario {
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.multiplicador {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+/* Ações dentro do card (Quantidade e Remover) */
+.acoes-produto {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.controle-qtd {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f9fafb;
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+}
+
+.controle-qtd label {
+    font-size: 0.9rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.controle-qtd .field {
+    width: 55px;
+    padding: 5px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: 600;
+}
+
+/* Botões pequenos de ação */
+.btn-acao {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.btn-atualizar {
+    color: #2563eb;
+    font-size: 1.1rem;
+    padding: 0 4px;
+}
+
+.btn-atualizar:hover {
+    color: #1d4ed8;
+}
+
+.btn-remover {
+    color: #dc2626;
+}
+
+.btn-remover:hover {
+    color: #b91c1c;
+    text-decoration: underline;
+}
+
+/* ==========================================
+   4. COLUNA DA DIREITA - RESUMO E PAGAMENTO
+   ========================================== */
+.card-resumo {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    border: 1px solid #e5e7eb;
+}
+
+.card-resumo h2 {
+    font-size: 1.3rem;
+    color: #111827;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.linha-resumo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    font-size: 1.05rem;
+}
+
+.valor-total {
+    font-size: 1.5rem;
+    color: #111827;
+}
+
+/* Botão Verde Principal */
+.btn-principal {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-pagar {
+    background-color: #16a34a;
+    color: white;
+    box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+}
+
+.btn-pagar:hover {
+    background-color: #15803d;
+}
+
+.form-esvaziar {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.btn-link-esvaziar {
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 0.9rem;
+    text-decoration: underline;
+}
+
+.btn-link-esvaziar:hover {
+    color: #4b5563;
+}
+
+/* ==========================================
+   5. ALERTAS FLUSH (MANTIDOS)
+   ========================================== */
+.container-alertas { margin-bottom: 20px; }
+.alerta {
+    padding: 12px 18px; border-radius: 6px; font-weight: 500; margin-bottom: 10px;
+    transition: opacity 0.5s ease-out; animation: surgimentoSuave 0.3s ease-out;
+}
+.alerta-sucesso { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+.alerta-erro { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+@keyframes surgimentoSuave { from { opacity: 0; transform: translateY(-50px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Elementos Hidden Ocultos para o flexbox */
+input[type="hidden"] { display: none !important; }
+
+/* RESPONSIVIDADE (Para Telas de Celular) */
+@media (max-width: 768px) {
+    .conteudo-carrinho {
+        grid-template-columns: 1fr; /* Quebra as colunas, empilhando o painel embaixo */
+    }
+    .card-produto {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    .acoes-produto {
+        width: 100%;
+        justify-content: space-between;
+    }
+}

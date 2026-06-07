@@ -1,134 +1,156 @@
-from flask import Flask, request, jsonify, render_template, url_for, redirect
+from flask import Flask, request, jsonify, render_template, url_for, redirect, flash
 from flask_cors import CORS
-import requests
 
-app = Flask(__name__)
-CORS(app)
-
-# constantes das urls #
-# url da landingpage do carrinho
-URL_CART_LANDING = "/carrinho"
-
-# url das 'VIEWS' do backend (funções python 'CALLERS')
-URL_CART_CALLER_RTN = URL_CART_LANDING + "/retornar"
-URL_CART_CALLER_ADD_ITEM = URL_CART_LANDING + "/adicionar/item"
-URL_CART_CALLER_CHG_QTD = URL_CART_LANDING + "/alterar/quantidade"
-URL_CART_CALLER_REM_ITEM = URL_CART_LANDING + "/remover/item"
-URL_CART_CALLER_FLSH = URL_CART_LANDING + "/esvaziar"
-
-carrinho = []
-
-## CALLERS ###
-@app.route(URL_CART_LANDING.lower(), methods=["GET"])
-def mostrar_carrinho():
-    global carrinho
-    total = sum((float(item["preco"])*(int(item["quantidade"]))) for item in carrinho)
-    return render_template("cart.html", frontend_carrinho=carrinho, frontend_total=total,
-                           url_fronted_cart_chg_qtd=URL_CART_CALLER_CHG_QTD,
-                           url_fronted_cart_rem_item=URL_CART_CALLER_REM_ITEM,
-                           url_fronted_cart_flush=URL_CART_CALLER_FLSH)
-
-@app.route(URL_CART_CALLER_RTN.lower(), methods=["GET"])
-def retornar_carrinho():
-    return jsonify(carrinho)
-
-@app.route(URL_CART_CALLER_ADD_ITEM.lower(), methods=["POST"])
-def adicionar_ao_carrinho():
+# ==========================================
+# 1. MODELO DE NEGÓCIO (ORIENTADO A OBJETOS)
+# ==========================================
+class Carrinho:
+    """Classe responsável por gerenciar o estado e regras do carrinho de compras."""
     
-    item_requisitado = request.json
-    status = add_to_cart(item_requisitado).json
-    print("adicionar ao carrinho caller: " + status["mensagem"])
-    return redirect(url_for("mostrar_carrinho"))
-    
-    
+    def __init__(self):
+        self.itens = []
 
-@app.route(URL_CART_CALLER_CHG_QTD.lower(), methods=["POST"])
-def alterar_quantidade_no_carrinho():
+    def obter_total(self) -> float:
+        """Calcula o valor total acumulado no carrinho."""
+        return sum((float(item["preco"]) * int(item["quantidade"])) for item in self.itens)
 
-    dados_recebidos_do_formulario_html = {"id": request.form.get("id"),
-                                          "quantidade": request.form.get("quantidade")}
-    
-    status = change_qtd_into_cart(dados_recebidos_do_formulario_html["id"],
-                                  dados_recebidos_do_formulario_html["quantidade"]).json
-    
-    print("alterar quantidade no carrinho caller: " + status["mensagem"])
-    return redirect(url_for("mostrar_carrinho"))
-    
+    def adicionar(self, item_requisitado: dict) -> str:
+        """Adiciona um item ou incrementa a quantidade se ele já existir."""
+        # Garante a tipagem correta dos dados recebidos
+        item_requisitado["id"] = int(item_requisitado["id"])
+        item_requisitado["quantidade"] = int(item_requisitado["quantidade"])
+        item_requisitado["preco"] = float(item_requisitado["preco"])
 
-@app.route(URL_CART_CALLER_REM_ITEM.lower(), methods=["POST"])
-def remover_do_carrinho():
-    
-    dados_recebidos_do_formulario_html = request.form.get("id")
-    status = rem_from_cart(dados_recebidos_do_formulario_html).json
-    print("remover do carrinho caller: " + status["mensagem"])
-    return redirect(url_for("mostrar_carrinho"))
-    
+        for item in self.itens:
+            if item["id"] == item_requisitado["id"]:
+                item["quantidade"] += item_requisitado["quantidade"]
+                return "Produto já estava no carrinho, quantidade incrementada."
 
-@app.route(URL_CART_CALLER_FLSH.lower(), methods=["GET"])
-def esvaziar_carrinho():
-    status = flush_cart().json
-    print("esvaziar o carrinho caller: " + status["mensagem"])
-    return redirect(url_for("mostrar_carrinho"))
+        self.itens.append(item_requisitado)
+        return "Produto novo adicionado ao carrinho."
 
-### Handlers ###
+    def alterar_quantidade(self, item_id: int, nova_qtd: int) -> str:
+        """Altera a quantidade de um item específico se o valor for válido."""
+        if nova_qtd >= 1:
+            for item in self.itens:
+                if item["id"] == int(item_id):
+                    item["quantidade"] = int(nova_qtd)
+                    return "Quantidade do item no carrinho foi alterada!"
+            return "Item não encontrado no carrinho."
+        return "A quantidade solicitada não é um valor válido (menor que 1)."
 
-def add_to_cart(item_requisitado):
+    def remover(self, item_id: int) -> str:
+        """Remove um item do carrinho com base no ID."""
+        self.itens = [item for item in self.itens if item["id"] != int(item_id)]
+        return "Item removido do carrinho!"
+
+    def esvaziar(self) -> str:
+        """Remove todos os elementos do carrinho."""
+        self.itens = []
+        return "O carrinho foi esvaziado!"
+
+
+# ==========================================
+# 2. CONFIGURAÇÃO DA APLICAÇÃO E ROTAS
+# ==========================================
+class ServidorCarrinho:
+    """Classe responsável por gerenciar a infraestrutura do Flask e rotas de rede."""
     
-    global carrinho
+    # Constantes de URL centralizadas como atributos de classe
+    URL_GATEWAY_LANDING = "http://localhost:5000/"
+    URL_CATALOG_LANDING = "http://localhost:5001/"
+    URL_PAYMENT_LANDING = "http://localhost:5003/"
+    URL_FRONTEND_CART_CHECKOUT = URL_PAYMENT_LANDING + "pagar"
     
-    print("id do produto que quer adicionar é: ", item_requisitado["id"])
-    print("nome do produto que quer adicionar é: ", item_requisitado["nome"])
-    print("o preço do produto que quer adicionar é: ", item_requisitado["preco"])
-    print("a quantidade de itens que quer adicionar é: ", item_requisitado["quantidade"])
+    URL_CART_LANDING = "/carrinho"
+    URL_CART_CALLER_RTN = URL_CART_LANDING + "/retornar"
+    URL_CART_CALLER_ADD_ITEM = URL_CART_LANDING + "/adicionar/item"
+    URL_CART_CALLER_CHG_QTD = URL_CART_LANDING + "/alterar/quantidade"
+    URL_CART_CALLER_REM_ITEM = URL_CART_LANDING + "/remover/item"
+    URL_CART_CALLER_FLSH = URL_CART_LANDING + "/esvaziar"
 
-    if(len(carrinho)==0):
-        carrinho.append(item_requisitado)
-        print("carrinho vazio, produto adicionado")
-    else:
-        print("carrinho não está vazio")
-        produto_existe = False
+    def __init__(self):
+        self.app = Flask(__name__)
+        CORS(self.app)
         
-        for item in carrinho:
-            if item["id"]==item_requisitado["id"]:
-                item["quantidade"] = item["quantidade"]+item_requisitado["quantidade"]
-                produto_existe = True
-                print("produto já estava no carrinho")
+        # OBRIGATÓRIO: Defina uma chave secreta qualquer para ativar o sistema de flash
+        self.app.secret_key = "abc"
 
-        if not produto_existe:
-            carrinho.append(item_requisitado)
-            print("produto não estava no carrinho")
-
-    
-    return jsonify({"mensagem":"item adicionado ao carrinho!"})
-
-def change_qtd_into_cart(item_id, new_qtd):
-    
-    global carrinho
-    
-    id_do_item = int(item_id)
-    quantidade_requisitada = int(new_qtd)
-
-    if (quantidade_requisitada>=1):
-        print("a quantidade solicitada é um valor válido")
-        for item in carrinho:
-            if item["id"] == id_do_item:
-                print("produto encontrado no carrinho")
-                item["quantidade"] = quantidade_requisitada
-    else:
-        print("a quantidade solicitada não é um valor válido")
+        # Instanciação do objeto de negócio (Substitui a antiga variável global)
+        self.carrinho = Carrinho()
         
-    return jsonify({"mensagem": "Quantidade do item no carrinho foi alterada!"})
+        # Vincula as rotas HTTP do Flask aos métodos da classe
+        self._registrar_rotas()
 
-def rem_from_cart(item_id):
-    global carrinho
-    id_do_item = int(item_id)
-    carrinho = [item for item in carrinho if item["id"] != id_do_item]
-    return jsonify({"mensagem": "Item removido do carrinho!"})
+    def _registrar_rotas(self):
+        """Mapeia as URLs para as respectivas funções internas."""
+        self.app.add_url_rule(self.URL_CART_LANDING.lower(), "mostrar_carrinho", self.mostrar_carrinho, methods=["GET"])
+        self.app.add_url_rule(self.URL_CART_CALLER_RTN.lower(), "retornar_carrinho", self.retornar_carrinho, methods=["GET"])
+        self.app.add_url_rule(self.URL_CART_CALLER_ADD_ITEM.lower(), "adicionar_ao_carrinho", self.adicionar_ao_carrinho, methods=["POST"])
+        self.app.add_url_rule(self.URL_CART_CALLER_CHG_QTD.lower(), "alterar_quantidade_no_carrinho", self.alterar_quantidade_no_carrinho, methods=["POST"])
+        self.app.add_url_rule(self.URL_CART_CALLER_REM_ITEM.lower(), "remover_do_carrinho", self.remover_do_carrinho, methods=["POST"])
+        self.app.add_url_rule(self.URL_CART_CALLER_FLSH.lower(), "esvaziar_carrinho", self.esvaziar_carrinho, methods=["GET"])
 
-def flush_cart():
-    global carrinho
-    carrinho = []
-    return jsonify({"mensagem": "O carrinho foi esvaziado!"})
+    # --- Métodos de Controle (Handlers das Rotas) ---
 
+    def mostrar_carrinho(self):
+        return render_template(
+            "cart.html", 
+            frontend_carrinho=self.carrinho.itens, 
+            frontend_total=self.carrinho.obter_total(),
+            url_fronted_cart_chg_qtd=self.URL_CART_CALLER_CHG_QTD,
+            url_fronted_cart_rem_item=self.URL_CART_CALLER_REM_ITEM,
+            url_fronted_cart_flush=self.URL_CART_CALLER_FLSH,
+            url_fronted_cart_checkout=self.URL_FRONTEND_CART_CHECKOUT,
+            url_fronted_cart_go_to_gateway=self.URL_GATEWAY_LANDING,
+            url_fronted_cart_go_to_catalog=self.URL_CATALOG_LANDING,
+            url_fronted_cart_go_to_payment=self.URL_PAYMENT_LANDING
+        )
+
+    def retornar_carrinho(self):
+        return jsonify(self.carrinho.itens)
+
+    def adicionar_ao_carrinho(self):
+        item_requisitado = request.json
+        mensagem = self.carrinho.adicionar(item_requisitado)
+        
+        # Cria a mensagem temporária (categoria 'sucesso')
+        flash(mensagem, "sucesso")
+        return redirect(url_for("mostrar_carrinho"))
+
+    def alterar_quantidade_no_carrinho(self):
+        item_id = int(request.form.get("id"))
+        quantidade = int(request.form.get("quantidade"))
+        
+        mensagem = self.carrinho.alterar_quantidade(item_id, quantidade)
+        
+        # Filtra se a mensagem foi de sucesso ou erro com base no retorno da classe
+        categoria = "sucesso" if "alterada" in mensagem else "erro"
+        flash(mensagem, categoria)
+        
+        return redirect(url_for("mostrar_carrinho"))
+
+    def remover_do_carrinho(self):
+        item_id = int(request.form.get("id"))
+        mensagem = self.carrinho.remover(item_id)
+        
+        flash(mensagem, "sucesso")
+        return redirect(url_for("mostrar_carrinho"))
+
+    def esvaziar_carrinho(self):
+        mensagem = self.carrinho.esvaziar()
+        
+        flash(mensagem, "sucesso")
+        return redirect(url_for("mostrar_carrinho"))
+
+    def iniciar(self, porta=5002):
+        """Coloca o servidor em execução."""
+        self.app.run(port=porta, debug=True)
+
+
+# ==========================================
+# 3. EXECUÇÃO DO MICROSSERVIÇO
+# ==========================================
 if __name__ == "__main__":
-    app.run(port=5002)
+    servico = ServidorCarrinho()
+    servico.iniciar(porta=5002)

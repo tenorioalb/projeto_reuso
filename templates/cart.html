@@ -1,70 +1,97 @@
 <!DOCTYPE html>
-    <html lang="pt-BR">
-    <head>
-        <meta charset="UTF-8">
-        <title>Carrinho</title>
-        <style>
-            body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
-            h1 { color: #333; }
-            a { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-        </style>
-    </head>
-    <body>
-    <ul>
-        <h1>No seu carrinho:</h1>
-        
-        {% if frontend_carrinho|length == 0%}
-            <h3>Ops... Não há nada para mostar aqui :(</h3>
-            <p>Aproveite e adicione algo ao seu carrinho agora!</p>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrinho de Compras</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}">
+</head>
+<body>
 
-        {% else %}
-        
-        {% for item in frontend_carrinho %}
-        
-        <li>
-            <p>{{ item.nome }} | R$ {{ item.preco }} | Qtd.: {{item.quantidade}}</p>
-        </li>
-
-        {% endfor %}
-
-        <h4>Opções para a sua compra:</h4>
-
-        {% for item in frontend_carrinho %}
-
-            <form action="{{ url_fronted_cart_chg_qtd }}" method="POST">
-                <!-- action era "/alterar" -->
-                <input type="text" name="id" value="{{ item.id }}" style="display: none">
-                <label>
-                    <li><p>Altere a quantidade de {{ item.nome }} no seu carrinho para:</p></li>
-                 </label>
-            
-                <input type="number" name="quantidade" min=1 step=1 value="{{ item.quantidade }}" style="width: 10%;height=10px;">
-                <input type="submit" value="Alterar quantidade">
-            </form>
-
-            <form action="{{ url_fronted_cart_rem_item }}" method="POST">
-                <!-- action era "/remover" -->
-                <label>
-                    <p> Ou...</p>
-                </label>
-                <input type="text" name="id" value="{{ item.id }}" style="display: none">
-                <input type="submit" value="Remova do seu carrinho">
-            </form>
-                <!-- <a href="/remover/{{ item.id }}">Remover do carrinho</a> -->
-
-        {% endfor %}
-            <form action="{{ url_fronted_cart_flush }}" method="GET">
-                <!-- action era "/esvaziar" -->
-                <label>
-                    <p>Ou então...</p>
-                </label>
-                <input type="submit" value="Esvazie o seu carrinho agora!">
-            </form>
-
-            <p><strong>Total:</strong> R$ {{ frontend_total }}</p>
-            <a href="/pagar">Finalizar Pagamento</a>
+    <!-- Container dos Alertas (Flash) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container-alertas">
+                {% for categoria, mensagem in messages %}
+                    <div class="alerta alerta-{{ categoria }}">
+                        <span>{{ mensagem }}</span>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
-    
-    </ul>
-    </body>
-    </html>
+    {% endwith %}
+
+    <header class="topo-pagina">
+        <h1>Seu Carrinho de Compras</h1>
+        <a href="{{ url_fronted_cart_go_to_getaway }}" class="link-voltar">&larr; Voltar para a Loja</a>
+    </header>
+
+    {% if frontend_carrinho|length == 0 %}
+        <div class="carrinho-vazio">
+            <h2>Ops... Não há nada para mostrar aqui :(</h2>
+            <p>Aproveite e adicione produtos incríveis ao seu carrinho agora mesmo!</p>
+        </div>
+    {% else %}
+        
+        <!-- CONTAINER PRINCIPAL DO LAYOUT EM COLUNAS -->
+        <div class="conteudo-carrinho">
+            
+            <!-- COLUNA DA ESQUERDA: LISTA DE PRODUTOS -->
+            <section class="secao-itens">
+                {% for item in frontend_carrinho %}
+                <div class="card-produto">
+                    <div class="info-produto">
+                        <h3>{{ item['nome'] }}</h3>
+                        <p class="preco-unitario">R$ {{ item['preco'] }} <span class="multiplicador">cada</span></p>
+                    </div>
+
+                    <div class="acoes-produto">
+                        <!-- Formulário de Alterar Quantidade -->
+                        <form action="{{ url_fronted_cart_chg_qtd }}" method="POST" class="form-alterar">
+                            <input type="hidden" name="id" value="{{ item['id'] }}">
+                            <div class="controle-qtd">
+                                <label for="qtd-{{ item['id'] }}">Qtd:</label>
+                                <input type="number" id="qtd-{{ item['id'] }}" class="field" name="quantidade" min="1" step="1" value="{{ item['quantidade'] }}" required>
+                                <button type="submit" class="btn-acao btn-atualizar" title="Atualizar quantidade">&#x21BB;</button>
+                            </div>
+                        </form>
+
+                        <!-- Formulário de Remover Item -->
+                        <form action="{{ url_fronted_cart_rem_item }}" method="POST">
+                            <input type="hidden" name="id" value="{{ item['id'] }}">
+                            <button type="submit" class="btn-acao btn-remover">Remover</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </section>
+
+            <!-- COLUNA DA DIREITA: PAINEL DE RESUMO -->
+            <aside class="painel-resumo">
+                <div class="card-resumo">
+                    <h2>Resumo do Pedido</h2>
+                    
+                    <div class="linha-resumo">
+                        <span>Total dos produtos:</span>
+                        <strong class="valor-total">R$ {{ frontend_total }}</strong>
+                    </div>
+
+                    <!-- Botão de Finalizar -->
+                    <form action="{{ url_fronted_cart_checkout }}" method="POST">
+                        <input type="hidden" name="custo_total" value="{{ frontend_total }}">
+                        <button type="submit" class="btn-principal btn-pagar">Finalizar Pagamento</button>
+                    </form>
+
+                    <!-- Botão de Esvaziar -->
+                    <form action="{{ url_fronted_cart_flush }}" method="GET" class="form-esvaziar">
+                        <button type="submit" class="btn-link-esvaziar">Esvaziar carrinho</button>
+                    </form>
+                </div>
+            </aside>
+
+        </div>
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+</body>
+</html>
