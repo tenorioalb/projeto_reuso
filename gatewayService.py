@@ -58,13 +58,12 @@ def esvaziar_o_carrinho():
     requests.get(CARRINHO_URL+"/esvaziar")
     return redirect(url_for("index"))
 
-@app.route("/pagar")
+@app.route("/pagamento/confirmado", methods=["GET"])
 def pagar():
-    carrinho = requests.get(CARRINHO_URL).json()
-    total = sum((float(item["preco"])*(int(item["quantidade"]))) for item in carrinho)
-    resposta = requests.post(PAGAMENTO_URL, json={"total": total}).json()
+    # total = float(request.form.get("custo_total"))
+    # resposta = requests.post(PAGAMENTO_URL, json={"total": total}).json()
     requests.get(CARRINHO_URL+"/esvaziar")
-    return f"<h2>{resposta['mensagem']}</h2><a href='/'>Voltar</a>"
+    return redirect(url_for("index"))
 
 if __name__ == "__main__":
     app.run(port=5000)
