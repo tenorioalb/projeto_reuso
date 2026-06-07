@@ -1,0 +1,60 @@
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+}
+
+body { 
+    background: #f3f4f6; 
+    padding: 60px 20px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 100vh; 
+}
+
+.card-sucesso { 
+    background: white; 
+    padding: 40px 30px; 
+    border-radius: 12px; 
+    width: 100%; 
+    max-width: 480px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+    text-align: center; 
+}
+
+.icone-check { 
+    font-size: 4rem; 
+    color: #10b981; 
+    margin-bottom: 15px; 
+}
+
+h1 { 
+    font-size: 1.6rem; 
+    color: #111827; 
+    margin-bottom: 10px; 
+}
+
+p { 
+    color: #4b5563; 
+    font-size: 1.05rem; 
+    margin-bottom: 25px; 
+    line-height: 1.5; 
+}
+
+.timer-box { 
+    font-size: 0.9rem; 
+    color: #9ca3af; 
+    border-top: 1px solid #e5e7eb; 
+    padding-top: 15px; 
+}
+
+.timer-box strong { 
+    color: #4b5563; 
+}
+
+/* Garante que o input contendo o link fique invisível */
+input[type="hidden"] {
+    display: none !important;
+}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Pagamento</title>
+
+    <!-- CSS Estático Vinculado -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/checkout.css') }}">
+
+    <!-- JavaScript Estático Vinculado -->
+    <script src="{{ url_for('static', filename='js/checkout.js') }}"></script>
+</head>
+<body>
+
+    <!-- Bloco de Mensagens Temporárias (Flash) Integrado -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container-alertas-checkout">
+                {% for categoria, mensagem in messages %}
+                    <div class="alerta alerta-{{ categoria }}">
+                        <span>{{ mensagem }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="container">
+        <h1>Finalizar seu Pedido</h1>
+        
+        <div class="total-box">
+            <p>Valor total da compra:</p>
+            <strong>R$ {{ total_pagamento }}</strong>
+        </div>
+
+        <form action="/confirmar" method="POST" id="formCheckout">
+            <input type="hidden" name="valor_final" value="{{ total_pagamento }}">
+
+            <label for="metodo_pagamento">Forma de Pagamento:</label>
+            <select name="metodo_pagamento" id="metodo_pagamento" required>
+                <option value="" disabled selected>-- Selecione uma opção --</option>
+                <option value="Pix">Pix (Código QR)</option>
+                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                <option value="Boleto Bancário">Boleto Bancário</option>
+            </select>
+
+            <!-- BLOCO 1: DINÂMICO DO PIX -->
+            <div id="container-pix" class="bloco-dinamico qr-container">
+                <p><strong>Escaneie o QR Code abaixo para pagar:</strong></p>
+                <img src="{{ qr_code_img }}" alt="QR Code Pix Fictício">
+                <p class="info-auxiliar">O pagamento será validado ao clicar no botão abaixo.</p>
+            </div>
+
+            <!-- BLOCO 2: DINÂMICO DO BOLETO -->
+            <div id="container-boleto" class="bloco-dinamico">
+                <p><strong>Linha digitável do Boleto:</strong></p>
+                <div class="boleto-box">{{ boleto_linha }}</div>
+            </div>
+
+            <!-- BLOCO 3: DINÂMICO DO CARTÃO DE CRÉDITO -->
+            <div id="container-cartao" class="bloco-dinamico bloco-alinhado-esquerda">
+                <label for="numero_cartao">Número do Cartão:</label>
+                <input type="text" id="numero_cartao" name="numero_cartao" class="field" placeholder="0000 0000 0000 0000" maxlength="19">
+
+                <label for="nome_titular">Nome Completo do Titular:</label>
+                <input type="text" id="nome_titular" name="nome_titular" class="field" placeholder="Como está impresso no cartão">
+            </div>
+
+            <button type="submit" class="btn-confirmar">Confirmar Pagamento</button>
+        </form>
+
+        <a href="{{ url_retornar_carrinho }}" class="link-cancelar">&larr; Cancelar e voltar ao carrinho</a>
+    </div>
+</body>
+</html>
