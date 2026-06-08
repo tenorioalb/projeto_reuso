@@ -1,0 +1,43 @@
+# Dados do catálogo de livros – Aplicação Livraria (Aplicação 2)
+LIVROS = [
+    {
+        "id": 1,
+        "nome": "Clean Code",
+        "autor": "Robert C. Martin",
+        "genero": "Engenharia de Software",
+        "paginas": 464,
+        "preco": 89.90,
+        "capa": "https://covers.openlibrary.org/b/isbn/0132350882-L.jpg",
+        "descricao": "Guia definitivo para escrever código limpo, legível e fácil de manter.",
+    },
+    {
+        "id": 2,
+        "nome": "Design Patterns (GoF)",
+        "autor": "Gamma, Helm, Johnson & Vlissides",
+        "genero": "Arquitetura de Software",
+        "paginas": 395,
+        "preco": 120.00,
+        "capa": "https://covers.openlibrary.org/b/isbn/0201633612-L.jpg",
+        "descricao": "Os 23 padrões de projeto clássicos para desenvolvimento orientado a objetos.",
+    },
+    {
+        "id": 3,
+        "nome": "The Pragmatic Programmer",
+        "autor": "David Thomas & Andrew Hunt",
+        "genero": "Desenvolvimento de Software",
+        "paginas": 352,
+        "preco": 95.00,
+        "capa": "https://covers.openlibrary.org/b/isbn/020161622X-L.jpg",
+        "descricao": "Dicas práticas e filosofia para se tornar um programador mais eficiente.",
+    },
+    {
+        "id": 4,
+        "nome": "Refactoring",
+        "autor": "Martin Fowler",
+        "genero": "Qualidade de Código",
+        "paginas": 448,
+        "preco": 110.00,
+        "capa": "https://covers.openlibrary.org/b/isbn/0201485672-L.jpg",
+        "descricao": "Técnicas para melhorar o design de código existente sem alterar seu comportamento.",
+    },
+]

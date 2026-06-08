@@ -1,0 +1,74 @@
+== Como executar o projeto ==
+
+1. Instale as dependências (apenas na primeira vez):
+
+   pip install -r requirements.txt
+
+
+=== APLICAÇÃO 1: E-commerce (Loja Didática) ===
+
+Abra 4 terminais na raiz do diretório projeto_atual/ e execute:
+
+   Terminal 1 — Catálogo de Produtos (porta 5001):
+   python catalogo/app.py
+
+   Terminal 2 — Carrinho de Compras (porta 5002):
+   python carrinho/app.py
+
+   Terminal 3 — Pagamento (porta 5003):
+   python pagamento/app.py
+
+   Terminal 4 — Gateway / Interface Web (porta 5000):
+   python gateway/app.py
+
+Acesse no navegador:
+   http://localhost:5000
+
+Health-check dos serviços:
+   http://localhost:5001/health  → catalogo
+   http://localhost:5002/health  → carrinho
+   http://localhost:5003/health  → pagamento
+
+
+=== APLICAÇÃO 2: Livraria Didática ===
+
+Abra 4 terminais na raiz do diretório projeto_atual/ e execute:
+
+   Terminal 1 — Catálogo de Livros (porta 5011):
+   python livraria/catalogo/app.py
+
+   Terminal 2 — Carrinho de Livros (porta 5012):
+   python livraria/carrinho/app.py
+
+   Terminal 3 — Pagamento de Livros (porta 5013):
+   python livraria/pagamento/app.py
+
+   Terminal 4 — Gateway Livraria / Interface Web (porta 5010):
+   python livraria/gateway/app.py
+
+Acesse no navegador:
+   http://localhost:5010
+
+Health-check dos serviços:
+   http://localhost:5011/health  → catalogo-livros
+   http://localhost:5012/health  → carrinho-livros
+   http://localhost:5013/health  → pagamento-livros
+
+
+=== Executar ambas as aplicações simultaneamente ===
+
+As duas aplicações usam portas diferentes e podem rodar ao mesmo tempo.
+Abra 8 terminais (4 para cada aplicação) e execute todos os comandos acima.
+
+
+=== Variáveis de ambiente (opcional) ===
+
+E-commerce:
+   CATALOGO_URL=http://localhost:5001  python gateway/app.py
+   CARRINHO_URL=http://localhost:5002  python gateway/app.py
+   PAGAMENTO_URL=http://localhost:5003 python gateway/app.py
+
+Livraria:
+   LIV_CATALOGO_URL=http://localhost:5011  python livraria/gateway/app.py
+   LIV_CARRINHO_URL=http://localhost:5012  python livraria/gateway/app.py
+   LIV_PAGAMENTO_URL=http://localhost:5013 python livraria/gateway/app.py
