@@ -1,10 +1,14 @@
 """
 Módulo: shared/factory.py
-Função de fábrica simples para criação de instâncias Flask com CORS.
 
-Nota: para microsserviços que precisam do padrão Template Method com
-hotspots, use shared/base_microservico.py (MicroserviceBase).
-Esta função permanece disponível para o API Gateway e scripts simples.
+Função de fábrica para criação de instâncias Flask com CORS.
+
+Quando usar esta função vs. MicroserviceBase
+--------------------------------------------
+- Use `MicroserviceBase` para microsserviços de negócio (catálogo, carrinho,
+  pagamento) que precisam do padrão Template Method com hotspots.
+- Use `criar_app()` para componentes de infraestrutura como os API Gateways,
+  que orquestram serviços mas não expõem hotspots de negócio próprios.
 """
 
 from flask import Flask

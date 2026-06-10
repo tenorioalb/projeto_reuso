@@ -1,23 +1,23 @@
 """
-Microsserviço: Carrinho de Livros – Aplicação Livraria
+[DEPRECADO] Microsserviço: Carrinho de Livros – Aplicação Livraria
 Porta: 5012
 
-Segunda aplicação – reutiliza MicroserviceBase para gerenciar
-o carrinho de livros.  A lógica de negócio é idêntica ao carrinho
-do E-commerce; o que muda é a mensagem de confirmação (hotspot).
+ATENÇÃO: Este serviço foi SUBSTITUÍDO pelo Carrinho Compartilhado em
+carrinho/app.py (porta 5002, ?ns=livraria).
 
-Endpoints
+O gateway da Livraria (livraria/gateway/app.py) já utiliza o serviço
+compartilhado. Este arquivo é mantido apenas como referência histórica
+que ilustra a evolução da arquitetura: de serviços duplicados por domínio
+para Platform Services compartilhados por namespace.
+
+Endpoints (não usar em produção — inicie carrinho/app.py :5002)
 ---------
 GET    /health           → {"status": "ok", "servico": "..."}       (frozen spot)
 GET    /carrinho         → lista JSON de livros no carrinho          (hotspot)
 POST   /carrinho         → adiciona livro; body: {id, nome, preco}   (hotspot)
 DELETE /carrinho/<id>    → remove primeira ocorrência do livro       (hotspot)
+POST   /carrinho/limpar  → esvazia o carrinho                        (hotspot)
 """
-
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
 from flask import request, jsonify
 from shared.base_microservico import MicroserviceBase
@@ -27,9 +27,9 @@ class CarrinhoLivrariaService(MicroserviceBase):
     """
     Componente Carrinho – Livraria (Aplicação 2).
 
-    Demonstra reuso do framework: a estrutura de inicialização
-    (CORS, health-check, Flask setup) é herdada sem alteração.
-    O hotspot _registrar_rotas() adapta apenas a mensagem de retorno.
+    Hotspot implementado:
+        _registrar_rotas() → rotas do carrinho de livros com mensagem
+        adaptada ao domínio ("Livro adicionado" vs "Item adicionado").
     """
 
     def __init__(self, nome: str, porta: int) -> None:
@@ -37,13 +37,6 @@ class CarrinhoLivrariaService(MicroserviceBase):
         self._carrinho: list = []
 
     def _registrar_rotas(self) -> None:
-        """
-        HOTSPOT: rotas do carrinho de livros.
-
-        Adaptação: mensagem de retorno específica para o contexto
-        da livraria ("Livro adicionado" vs "Item adicionado").
-        """
-
         @self.app.route("/carrinho", methods=["GET"])
         def ver_carrinho():
             return jsonify(self._carrinho)
@@ -64,8 +57,11 @@ class CarrinhoLivrariaService(MicroserviceBase):
                     return jsonify({"mensagem": "Livro removido do carrinho."})
             return jsonify({"erro": "Livro não encontrado no carrinho."}), 404
 
+        @self.app.route("/carrinho/limpar", methods=["POST"])
+        def limpar_carrinho():
+            self._carrinho.clear()
+            return jsonify({"mensagem": "Carrinho esvaziado."})
 
-# Ponto de entrada
+
 if __name__ == "__main__":
-    servico = CarrinhoLivrariaService(__name__, porta=5012)
-    servico.executar()
+    CarrinhoLivrariaService(__name__, porta=5012).executar()

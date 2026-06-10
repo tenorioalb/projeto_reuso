@@ -1,74 +1,152 @@
 == Como executar o projeto ==
 
+Execute todos os comandos a partir da RAIZ do diretório projeto_reuso/.
+O uso de `python -m` é necessário para os imports entre pacotes funcionarem corretamente.
+
 1. Instale as dependências (apenas na primeira vez):
 
    pip install -r requirements.txt
 
 
-=== APLICAÇÃO 1: E-commerce (Loja Didática) ===
+== Arquitetura de Portas ==
 
-Abra 4 terminais na raiz do diretório projeto_atual/ e execute:
+   SERVIÇOS COMPARTILHADOS (Platform Services)
+   ─────────────────────────────────────────────
+   5002  Carrinho Compartilhado   ← E-commerce (?ns=ecommerce) e Livraria (?ns=livraria)
+   5003  Pagamento Compartilhado  ← E-commerce (dominio=ecommerce) e Livraria (dominio=livraria)
+   5004  Pedidos Compartilhados   ← histórico persistido em dados/pedidos.json
 
-   Terminal 1 — Catálogo de Produtos (porta 5001):
-   python catalogo/app.py
+   APLICAÇÃO 1 — E-commerce (Loja Didática)
+   ─────────────────────────────────────────
+   5000  Gateway / Interface Web
+   5001  Catálogo de Produtos
 
-   Terminal 2 — Carrinho de Compras (porta 5002):
-   python carrinho/app.py
+   APLICAÇÃO 2 — Livraria Didática
+   ─────────────────────────────────
+   5010  Gateway / Interface Web
+   5011  Catálogo de Livros
 
-   Terminal 3 — Pagamento (porta 5003):
-   python pagamento/app.py
 
-   Terminal 4 — Gateway / Interface Web (porta 5000):
-   python gateway/app.py
+=== EXECUTAR AMBAS AS APLICAÇÕES SIMULTANEAMENTE ===
+
+Abra 7 terminais na raiz do projeto:
+
+   Terminal 1 — Carrinho Compartilhado (porta 5002):
+   python -m carrinho.app
+
+   Terminal 2 — Pagamento Compartilhado (porta 5003):
+   python -m pagamento.app
+
+   Terminal 3 — Pedidos (porta 5004):
+   python -m pedido.app
+
+   Terminal 4 — Catálogo de Produtos / E-commerce (porta 5001):
+   python -m catalogo.app
+
+   Terminal 5 — Gateway E-commerce / Interface Web (porta 5000):
+   python -m gateway.app
+
+   Terminal 6 — Catálogo de Livros / Livraria (porta 5011):
+   python -m livraria.catalogo.app
+
+   Terminal 7 — Gateway Livraria / Interface Web (porta 5010):
+   python -m livraria.gateway.app
 
 Acesse no navegador:
-   http://localhost:5000
+   http://localhost:5000   →  E-commerce (Loja Didática)
+   http://localhost:5010   →  Livraria Didática
 
-Health-check dos serviços:
+
+=== APLICAÇÃO 1 ISOLADA: E-commerce (Loja Didática) ===
+
+Abra 5 terminais na raiz do projeto:
+
+   Terminal 1 — Carrinho Compartilhado (porta 5002):
+   python -m carrinho.app
+
+   Terminal 2 — Pagamento Compartilhado (porta 5003):
+   python -m pagamento.app
+
+   Terminal 3 — Pedidos (porta 5004):
+   python -m pedido.app
+
+   Terminal 4 — Catálogo de Produtos (porta 5001):
+   python -m catalogo.app
+
+   Terminal 5 — Gateway / Interface Web (porta 5000):
+   python -m gateway.app
+
+Acesse: http://localhost:5000
+
+
+=== APLICAÇÃO 2 ISOLADA: Livraria Didática ===
+
+Abra 5 terminais na raiz do projeto:
+
+   Terminal 1 — Carrinho Compartilhado (porta 5002):
+   python -m carrinho.app
+
+   Terminal 2 — Pagamento Compartilhado (porta 5003):
+   python -m pagamento.app
+
+   Terminal 3 — Pedidos (porta 5004):
+   python -m pedido.app
+
+   Terminal 4 — Catálogo de Livros (porta 5011):
+   python -m livraria.catalogo.app
+
+   Terminal 5 — Gateway / Interface Web (porta 5010):
+   python -m livraria.gateway.app
+
+Acesse: http://localhost:5010
+
+
+=== Health-check dos serviços ===
+
+   http://localhost:5002/health  → carrinho-compartilhado
+   http://localhost:5003/health  → pagamento-compartilhado
+   http://localhost:5004/health  → pedidos
    http://localhost:5001/health  → catalogo
-   http://localhost:5002/health  → carrinho
-   http://localhost:5003/health  → pagamento
-
-
-=== APLICAÇÃO 2: Livraria Didática ===
-
-Abra 4 terminais na raiz do diretório projeto_atual/ e execute:
-
-   Terminal 1 — Catálogo de Livros (porta 5011):
-   python livraria/catalogo/app.py
-
-   Terminal 2 — Carrinho de Livros (porta 5012):
-   python livraria/carrinho/app.py
-
-   Terminal 3 — Pagamento de Livros (porta 5013):
-   python livraria/pagamento/app.py
-
-   Terminal 4 — Gateway Livraria / Interface Web (porta 5010):
-   python livraria/gateway/app.py
-
-Acesse no navegador:
-   http://localhost:5010
-
-Health-check dos serviços:
    http://localhost:5011/health  → catalogo-livros
-   http://localhost:5012/health  → carrinho-livros
-   http://localhost:5013/health  → pagamento-livros
+   http://localhost:5000/health  → gateway-ecommerce
+   http://localhost:5010/health  → gateway-livraria
 
 
-=== Executar ambas as aplicações simultaneamente ===
+=== Inspecionar pedidos registrados ===
 
-As duas aplicações usam portas diferentes e podem rodar ao mesmo tempo.
-Abra 8 terminais (4 para cada aplicação) e execute todos os comandos acima.
+   Todos os pedidos (ambos os domínios):
+   http://localhost:5004/pedidos
+
+   Somente E-commerce:
+   http://localhost:5004/pedidos?dominio=ecommerce
+
+   Somente Livraria:
+   http://localhost:5004/pedidos?dominio=livraria
+
+   Os pedidos ficam salvos em dados/pedidos.json na raiz do projeto.
 
 
 === Variáveis de ambiente (opcional) ===
 
 E-commerce:
-   CATALOGO_URL=http://localhost:5001  python gateway/app.py
-   CARRINHO_URL=http://localhost:5002  python gateway/app.py
-   PAGAMENTO_URL=http://localhost:5003 python gateway/app.py
+   CATALOGO_URL=http://localhost:5001   python -m gateway.app
+   CARRINHO_URL=http://localhost:5002   python -m gateway.app
+   PAGAMENTO_URL=http://localhost:5003  python -m gateway.app
+   PEDIDO_URL=http://localhost:5004     python -m gateway.app
+   CARRINHO_NS=ecommerce                python -m gateway.app
 
 Livraria:
-   LIV_CATALOGO_URL=http://localhost:5011  python livraria/gateway/app.py
-   LIV_CARRINHO_URL=http://localhost:5012  python livraria/gateway/app.py
-   LIV_PAGAMENTO_URL=http://localhost:5013 python livraria/gateway/app.py
+   LIV_CATALOGO_URL=http://localhost:5011  python -m livraria.gateway.app
+   CARRINHO_URL=http://localhost:5002      python -m livraria.gateway.app
+   PAGAMENTO_URL=http://localhost:5003     python -m livraria.gateway.app
+   PEDIDO_URL=http://localhost:5004        python -m livraria.gateway.app
+   CARRINHO_NS=livraria                    python -m livraria.gateway.app
+
+
+=== Serviços deprecados (mantidos como referência histórica) ===
+
+   livraria/carrinho/app.py   (porta 5012) — substituído por carrinho/app.py  :5002
+   livraria/pagamento/app.py  (porta 5013) — substituído por pagamento/app.py :5003
+
+   NÃO execute esses serviços em produção. O gateway da Livraria já usa os
+   serviços compartilhados automaticamente.

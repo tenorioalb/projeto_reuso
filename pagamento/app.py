@@ -1,62 +1,57 @@
 """
-Microsserviço: Pagamento – Aplicação E-commerce
+Microsserviço: Pagamento – Serviço Compartilhado
 Porta: 5003
 
-Componente do Framework de Microsserviços.
-Implementa o hotspot _registrar_rotas() herdado de MicroserviceBase,
-processando a confirmação de pagamento com base no total recebido.
+Serviço de plataforma compartilhado entre TODAS as aplicações do framework.
+A mensagem de confirmação é adaptada ao domínio informado no body:
+
+    {"total": 89.90, "dominio": "livraria"}
+    → "Compra de livros no valor de R$89.90 confirmada! Bons estudos!"
+
+    {"total": 3500.00, "dominio": "ecommerce"}
+    → "Pagamento de R$3500.00 realizado com sucesso!"
+
+Demonstra configuração por dados (tabela de mensagens) em vez de
+herança: sem subclasses, a variação é declarada no dicionário _MENSAGENS.
 
 Endpoints
 ---------
-GET  /health    → {"status": "ok", "servico": "..."}   (frozen spot)
-POST /pagamento → {"mensagem": str}; body: {total: float}(hotspot)
+GET  /health    → {"status": "ok", "servico": "..."}       (frozen spot)
+POST /pagamento → {"mensagem": str}; body: {total, dominio} (hotspot)
 """
-
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from flask import request, jsonify
 from shared.base_microservico import MicroserviceBase
 
+_MENSAGENS: dict[str, str] = {
+    "ecommerce": "Pagamento de R${total:.2f} realizado com sucesso!",
+    "livraria":  "Compra de livros no valor de R${total:.2f} confirmada! Bons estudos!",
+}
+_MENSAGEM_PADRAO = "Pagamento de R${total:.2f} realizado com sucesso!"
 
-class PagamentoService(MicroserviceBase):
+
+class PagamentoCompartilhado(MicroserviceBase):
     """
-    Componente Pagamento – E-commerce (Aplicação 1).
+    Serviço de Pagamento compartilhado.
 
-    Recebe o total da compra e retorna uma mensagem de confirmação.
-    Em um sistema real, esta classe integraria com uma gateway de
-    pagamento externa (ex.: Stripe, PagSeguro).
-
-    Ponto de adaptação (hotspot):
-        Rota POST /pagamento com mensagem específica do domínio.
+    A mensagem de confirmação é um "hotspot de dados": configurada
+    por domínio no dicionário _MENSAGENS, sem necessidade de subclasses.
+    Adicionar suporte a um novo domínio requer apenas uma nova entrada
+    no dicionário — nenhuma alteração no código de lógica.
     """
 
     def _registrar_rotas(self) -> None:
-        """
-        HOTSPOT: registra rota de processamento de pagamento.
-
-        Adaptação do framework: define a lógica de validação do total
-        e o formato da mensagem de confirmação devolvida ao gateway.
-        """
 
         @self.app.route("/pagamento", methods=["POST"])
         def realizar_pagamento():
-            """
-            Processa o pagamento do carrinho.
-            Body esperado: {"total": float}
-            """
             dados = request.get_json()
             if not dados or "total" not in dados:
                 return jsonify({"erro": "Total não informado"}), 400
-            total = dados["total"]
-            return jsonify({
-                "mensagem": f"Pagamento de R${total:.2f} realizado com sucesso!"
-            })
+            total   = float(dados["total"])
+            dominio = dados.get("dominio", "")
+            template = _MENSAGENS.get(dominio, _MENSAGEM_PADRAO)
+            return jsonify({"mensagem": template.format(total=total)})
 
 
-# Ponto de entrada – instancia e executa o microsserviço
 if __name__ == "__main__":
-    servico = PagamentoService(__name__, porta=5003)
-    servico.executar()
+    PagamentoCompartilhado(__name__, porta=5003).executar()
